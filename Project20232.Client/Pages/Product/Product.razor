@@ -1,0 +1,81 @@
+﻿@page "/product/{Id}"
+@using Project202322.Shared.Domain;
+@using Project20232.Server.IRepository;
+@using Project20232.Server.Repository;
+@using Microsoft.JSInterop;
+@using Microsoft.AspNetCore.Components.Routing
+@inject IProductRepository ProductRepository
+@inject ICategoryRepository CategoryRepository
+@inject IJSRuntime js
+@inject NavigationManager NavigationManager
+@using Project20232.Server.IRepository
+
+<h1>Product</h1>
+
+<div>
+    <table>
+        <tr>
+            <td>Product ID:</td>
+            <td>@product.Id</td>
+        </tr>
+        <tr>
+            <td>Product Name:</td>
+            <td>@product.Name</td>
+        </tr>
+        <tr>
+            <td>Product Price:</td>
+            <td>@product.Price</td>
+        </tr>
+        <tr>
+            <td>Product Category:</td>
+            <td>@category.Name</td>
+        </tr>
+        <tr>
+            <td>Product Rating:</td>
+            <td>@product.Rating</td>
+        </tr>
+    </table>
+</div>
+
+<div>
+    <a href="#" class="btn btn-primary" @onclick="View">
+        <span class="oi oi-book"></span> View
+    </a>
+    <a href="#" class="btn btn-warning" @onclick="Edit">
+        <span class="oi oi-pencil"></span> Edit
+    </a>
+    <button class="btn btn-danger" @onclick="@(()=>Delete(product.Id))">
+        <span class="oi oi-delete"></span> Delete
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Product product;
+    private Category category;
+
+    protected override async Task OnInitializedAsync()
+    {
+        product = await ProductRepository.GetProduct(Id);
+        category = await CategoryRepository.GetCategory(product.CategoryId);
+    }
+
+    private async Task Delete(int id)
+    {
+        var response = await ProductRepository.DeleteProduct(id);
+        if (response.Success)
+        {
+            // Display success message to user
+            await js.InvokeAsync<object>("alert", "Product deleted successfully!");
+
+            // Navigate back to the product list page
+            NavigationManager.NavigateTo("/product");
+        }
+        else
+        {
+            // Display error message to user
+            await js.InvokeAsync<object>("alert", "An error occurred while deleting the product. Please try again.");
+        }
+    }
+}
